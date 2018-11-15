@@ -1,6 +1,7 @@
 ﻿script "widget 'directoryList' behavior"
-local fileList
-local settingHiliteInScript
+local fileList #full path list of all the files
+local settingHiliteInScript #was hiliteChanged fired because the user selected a row or because I set it in a script
+local initialized #did we initialize the properties of the tree?
 
 
 on clearList
@@ -10,10 +11,33 @@ end clearList
 
 
 on populate thePath, filterFor
+   if not initialized then initialize
    put empty into fileList
    directoryWalk thePath, filterFor
    populateTreeView fileList
 end populate
+
+
+
+private command initialize
+   if initialized then exit initialize
+
+   #<mandatory>
+      set the pathDelimiter of me to slash
+      set the readOnly of me to true
+   #</mandatory>
+
+   #<optional>
+      set the alternateRowBackgrounds of me to true
+      set the arrayStyle of me to false
+      set the showBorder of me to true
+      set the showSeparator of me to false
+      set the sortType of me to "text"
+   #</optional>
+
+   put true into initialized
+end initialize
+
 
 
 
@@ -47,7 +71,7 @@ private command populateTreeView withWhat
    set the wholeMatches to true
    repeat for each line theLine in withWhat
       delete char 1 of theLine # opening slash #debugx - in scanhammer this shouldn't happen I don't think
-            
+      
       put "["&quote before theLine #beginning of array key
       put quote&"]" after theLine#end of array key
       replace slash with quote&"]["&quote in theLine #slashes delimit what will be array keys
@@ -89,30 +113,28 @@ end populateTreeView
 
 
 
-on hiliteChanged
+   on hiliteChanged
    if settingHiliteInScript then #don't fire the event again - was fired by setting the hilite below (hiliteChanged fires whether the user clicks on a line or we set it manually)
       put false into settingHiliteInScript
       exit hiliteChanged
    end if #settingHiliteInScript
    lock screen
    put slash & the hilitedElement of me into goop
-   delete last char of goop #trailing comma b/c not using "value" only using "key"
-   replace comma with slash in goop
+   delete last char of goop #trailing slash b/c not using "value" only using "key"
    set the wholeMatches to true
    if goop is not among the lines of fileList then #it's a directory - in fileList fully-expressed paths appear, but when that is converted to a tree, each directory gets its own line, too.
       put true into settingHiliteInScript
       set the hilitedElement of me to 0 #kluge-alert!  setting it to empty throws an error.  0 won't work if there is a "0" directory.
       exit hiliteChanged
    end if #lineOffset(goop,directoriesList) is not 0 then
-   replace comma with slash in goop
    unlock screen
    returnChoice goop
 end hiliteChanged
-   
-   
-   
-   private command returnChoice what
-      answer "Modify the returnChoice handler in the behavior script for the directoryList widget to do more than just throw an answer dialog."&cr&what
-   end returnChoice
+
+
+
+private command returnChoice what
+   answer "Modify the returnChoice handler in the behavior script for the directoryList widget to do more than just throw an answer dialog."&cr&what
+end returnChoice
 #</treeView events>
 ##################################################################################################################################

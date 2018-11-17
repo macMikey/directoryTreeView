@@ -59,7 +59,7 @@ private command directoryWalk whatFolder, filterFor
    sort theFolders
    repeat for each line theFolder in theFolders
       if theFolder is "." or theFolder is ".." then next repeat
-      directoryWalk (whatFolder & slash & theFolder)
+      directoryWalk (whatFolder & slash & theFolder), filterFor
    end repeat #for each line x in theFolders
 end directoryWalk
 

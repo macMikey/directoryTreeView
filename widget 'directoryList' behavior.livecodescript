@@ -1,6 +1,5 @@
 ﻿script "widget 'directoryList' behavior"
 local fileList #full path list of all the files
-local settingHiliteInScript #was hiliteChanged fired because the user selected a row or because I set it in a script
 local initialized #did we initialize the properties of the tree?
 
 
@@ -114,17 +113,13 @@ end populateTreeView
 
 
    on hiliteChanged
-   if settingHiliteInScript then #don't fire the event again - was fired by setting the hilite below (hiliteChanged fires whether the user clicks on a line or we set it manually)
-      put false into settingHiliteInScript
-      exit hiliteChanged
-   end if #settingHiliteInScript
    lock screen
    put slash & the hilitedElement of me into goop
    delete last char of goop #trailing slash b/c not using "value" only using "key"
    set the wholeMatches to true
    if goop is not among the lines of fileList then #it's a directory - in fileList fully-expressed paths appear, but when that is converted to a tree, each directory gets its own line, too.
-      put true into settingHiliteInScript
-      set the hilitedElement of me to 0 #kluge-alert!  setting it to empty throws an error.  0 won't work if there is a "0" directory.
+      lock messages # otherwise hiliteChanged will fire again
+      set the hilitedElement of me to 0 #kluge-alert!  setting it to empty throws an error.  0 won't work if there is a "0" directory.  Fixed in 9.0.1 RC1
       exit hiliteChanged
    end if #lineOffset(goop,directoriesList) is not 0 then
    unlock screen
